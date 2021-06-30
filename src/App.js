@@ -12,7 +12,7 @@ function App() {
       <BrowserRouter>
           {
             router.map((v,i)=>{
-              return (<Route path={v.path} key={v.path} render={route=>{
+              return (<Route path={v.path} exact key={v.path} render={route=>{
                 return <v.component {...route}></v.component> 
               }}></Route>)
             })

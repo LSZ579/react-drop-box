@@ -9,27 +9,35 @@ import './style.css'
             
                 list:[],//目标区域的方块
 
-                selectStyle: {
+                selectStyle: {//框选区域style
                     x:0,
                     y:0,
                     w:0,
                     h:0,
                 },
-                select: 0,
+                select: 0,//是否开始框选
                 moveAdd: 0,//开始拖进去
                 addStyle: {
                     x: 0,
                     y:0
                 },
-                activeIndex: -1,
-                bindMove: 0,
+                activeIndex: -1,//激活的box块
+                bindMove: 0,//是否拖拽在目标区域外
           }
           
-      }
-    componentDidMount(){
-        window.addEventListener('keyup',this.deleteBox)
     }
-    deleteBox = (e)=>{
+
+    componentDidMount(){
+        window.addEventListener('keyup',this.keyupOperation)
+    }
+
+    componentWillUnmount(){
+        window.removeEventListener('keyup',this.keyupOperation)
+        window.removeEventListener('mouseup',this.moveAddboxEnd)
+    }
+
+    // 键盘事件监听
+    keyupOperation = (e)=>{
         e.preventDefault()
         let {code} = e,activeIndex = this.state.activeIndex,
         list = this.state.list;
@@ -56,13 +64,14 @@ import './style.css'
         }
     }
 
+    //更新boxList
     updateBoxList = (list)=>{
         this.setState({
             list
         })
     }
 
-    move = (e)=>{
+    boxMove = (e)=>{
         e.stopPropagation()
         e.preventDefault()
         if(this.state.moveFlag==1){
@@ -82,10 +91,10 @@ import './style.css'
         this.setState({
             moveFlag: 0
         })
-        window.removeEventListener('mousemove',this.move,false)
+        window.removeEventListener('mousemove',this.boxMove,false)
     }
     // 目标区域的方块开始拖拽
-    down =(event,i)=>{
+    boxMousedown =(event,i)=>{
         event.stopPropagation()
         event.preventDefault()
         this.setState({
@@ -97,9 +106,9 @@ import './style.css'
             this.setState({
                 moveFlag: 0
             })
-            window.removeEventListener('mousemove',this.move,false)
+            window.removeEventListener('mousemove',this.boxMove,false)
         })
-        window.addEventListener('mousemove',this.move,false)
+        window.addEventListener('mousemove',this.boxMove,false)
     }
     // 开始框选
     beginSelect = (e)=>{
@@ -143,24 +152,26 @@ import './style.css'
         this.setState({
             moveAdd: 1
         })
-        window.addEventListener('mouseup',(es)=>{
-            if(!this.state.bindMove&&this.state.moveAdd){
-                let {offsetX,offsetY} = es
-                let list = this.state.list
-                let x = (offsetX-50)<=0?0:(offsetX-50)>650?600:(offsetX-50);
-                let y = offsetY-50;
-                list.push({x,y,active: 0})
-                this.setState({
-                    list
-                })
-            }
-            this.setState({
-                moveAdd: 0,
-                bindMove: 0
-            })
-            window.removeEventListener('mousemove',this.beginMoveToBox)
-        })
+        window.addEventListener('mouseup',this.moveAddboxEnd)
         window.addEventListener('mousemove',this.beginMoveToBox,false)
+    }
+
+    moveAddboxEnd = (es)=>{
+        if(!this.state.bindMove&&this.state.moveAdd){
+            let {offsetX,offsetY} = es
+            let list = this.state.list
+            let x = (offsetX-50)<=0?0:(offsetX-50)>650?600:(offsetX-50);
+            let y = offsetY-50;
+            list.push({x,y,active: 0})
+            this.setState({
+                list
+            })
+        }
+        this.setState({
+            moveAdd: 0,
+            bindMove: 0
+        })
+        window.removeEventListener('mousemove',this.beginMoveToBox)
     }
 
     // 拖拽到目标区域过程
@@ -210,7 +221,7 @@ import './style.css'
                 {this.state.select?<div className="select" style={{transform: `translate(${this.state.selectStyle.x}px,${this.state.selectStyle.y}px)`,width:`${this.state.selectStyle.w}px`,height:`${this.state.selectStyle.h}px`}}></div>:''}
                 {
                     this.state.list.map((v,i)=>{
-                        return  <div className={`box ${i==this.state.activeIndex?'box-active':''}`} key={i}  onMouseDown={(e)=>{this.down(e,i)}} onMouseUp={this.mouseUp} style={{transform:`translate(${v.x}px,${v.y}px)`,'pointer-events':this.state.moveFlag||this.state.moveAdd||this.state.select?'none':'auto'}}>{i}</div>
+                        return  <div className={`box ${i==this.state.activeIndex?'box-active':''}`} key={i}  onMouseDown={(e)=>{this.boxMousedown(e,i)}} onMouseUp={this.mouseUp} style={{transform:`translate(${v.x}px,${v.y}px)`,'pointer-events':this.state.moveFlag||this.state.moveAdd||this.state.select?'none':'auto'}}>{i}</div>
                     })
                 }
             </div>

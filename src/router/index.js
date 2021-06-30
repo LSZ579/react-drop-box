@@ -6,7 +6,7 @@ import homePage from '../views/home'
 
 const router = [
     {
-        path: '',
+        path: '/',
         component: homePage
     },
     {
