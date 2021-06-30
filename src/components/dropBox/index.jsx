@@ -4,7 +4,7 @@ import './style.css'
       constructor(props){
           super(props)
           this.state={
-                flag: 0,//目标区域的方块拖拽开关
+                moveFlag: 0,//目标区域的方块拖拽开关
                 index: 0,//选中的方块
             
                 list:[],//目标区域的方块
@@ -24,12 +24,48 @@ import './style.css'
                 activeIndex: -1,
                 bindMove: 0,
           }
+          
       }
-    
+    componentDidMount(){
+        window.addEventListener('keyup',this.deleteBox)
+    }
+    deleteBox = (e)=>{
+        e.preventDefault()
+        let {code} = e,activeIndex = this.state.activeIndex,
+        list = this.state.list;
+        console.log(code)
+        if(activeIndex>-1){
+            if(code == 'Delete'){
+                list.splice(this.state.activeIndex,1)
+                this.setState({
+                    list,
+                    activeIndex: -1
+                })
+            }else{
+                if(code == 'ArrowUp'){
+                    list[activeIndex].y-=1
+                }else if(code == 'ArrowLeft'){
+                    list[activeIndex].x-=1
+                }else if(code == 'ArrowRight'){
+                    list[activeIndex].x+=1
+                }else if(code == 'ArrowDown'){
+                    list[activeIndex].y+=1
+                }
+                this.updateBoxList(list)
+            }
+        }
+    }
+
+    updateBoxList = (list)=>{
+        this.setState({
+            list
+        })
+    }
+
     move = (e)=>{
         e.stopPropagation()
         e.preventDefault()
-        if(this.state.flag==1){
+        if(this.state.moveFlag==1){
             if(e.target.classList[0]  != 'page') return
             let {offsetX,offsetY} = e
             console.log(offsetX,offsetY)
@@ -44,7 +80,7 @@ import './style.css'
     // 目标区域的方块放下拖动
     mouseUp = (e)=>{
         this.setState({
-            flag: 0
+            moveFlag: 0
         })
         window.removeEventListener('mousemove',this.move,false)
     }
@@ -53,13 +89,13 @@ import './style.css'
         event.stopPropagation()
         event.preventDefault()
         this.setState({
-            flag: 1,
+            moveFlag: 1,
             index: i,
             activeIndex: i
         })
         window.addEventListener('mouseup',()=>{
             this.setState({
-                flag: 0
+                moveFlag: 0
             })
             window.removeEventListener('mousemove',this.move,false)
         })
@@ -170,11 +206,11 @@ import './style.css'
             <div className="left">
                 <div className="move-box" onMouseDown={this.beginMoveAdd} style={{cursor: this.state.bindMove==1?'no-drop': 'auto'}}></div>
             </div>
-            <div className={`page  ${!this.state.bindMove&&this.state.moveAdd?'active':''}`}  onMouseDown={this.beginSelect} onMouseMove={this.selectMove} onMouseUp={this.selectUp} style={this.state.flag?{cursor: 'move'}:{}}>
+            <div className={`page  ${!this.state.bindMove&&this.state.moveAdd?'active':''}`}  onMouseDown={this.beginSelect} onMouseMove={this.selectMove} onMouseUp={this.selectUp} style={this.state.moveFlag?{cursor: 'move'}:{}}>
                 {this.state.select?<div className="select" style={{transform: `translate(${this.state.selectStyle.x}px,${this.state.selectStyle.y}px)`,width:`${this.state.selectStyle.w}px`,height:`${this.state.selectStyle.h}px`}}></div>:''}
                 {
                     this.state.list.map((v,i)=>{
-                        return  <div className={`box ${i==this.state.activeIndex?'box-active':''}`} key={i}  onMouseDown={(e)=>{this.down(e,i)}} onMouseUp={this.mouseUp} style={{transform:`translate(${v.x}px,${v.y}px)`,'pointer-events':this.state.flag||this.state.moveAdd||this.state.select?'none':'auto'}}>{i}</div>
+                        return  <div className={`box ${i==this.state.activeIndex?'box-active':''}`} key={i}  onMouseDown={(e)=>{this.down(e,i)}} onMouseUp={this.mouseUp} style={{transform:`translate(${v.x}px,${v.y}px)`,'pointer-events':this.state.moveFlag||this.state.moveAdd||this.state.select?'none':'auto'}}>{i}</div>
                     })
                 }
             </div>

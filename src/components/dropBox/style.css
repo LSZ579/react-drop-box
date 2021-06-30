@@ -1,3 +1,14 @@
+.page-box{
+    display: flex;
+    position: absolute;
+    box-sizing: content-box;
+    width: 100vw;
+    overflow: hidden;
+    height: 100vh;
+}
+
+
+
 .box{
     width: 100px;
     height: 100px;
@@ -39,12 +50,6 @@
     border: 1px solid rgb(27, 202, 233);
 }
 
-.page-box{
-    display: flex;
-    position: absolute;
-    width: 100vw;
-    height: 100vh;
-}
 
 .left{
     margin: 20px;
