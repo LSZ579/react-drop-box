@@ -1,0 +1,56 @@
+.box{
+    width: 100px;
+    height: 100px;
+    /* display: inline-block; */
+    background-color: aquamarine;
+    /* transform: translate(0,0); */
+    user-select: none;
+    border: 1px dashed aquamarine;
+    position: absolute;
+    /* pointer-events: none; */
+    /* cursor: move; */
+    /* cursor: move; */
+    /* cursor: no-drop; */
+}
+.box-active{
+    
+    border: 1px dashed rgb(255, 189, 127);
+}
+
+
+
+.page{
+    left: 50%;
+    position: absolute;
+    width: 700px;
+    height: 100vh;
+    margin-left: -350px;
+    background-color: beige;
+    border: 2px dashed beige;
+}
+.active{
+    border: 2px dashed rgb(240, 99, 181);
+}
+.select{
+    background-color: rgba(127, 255, 255,0.2);
+    position: absolute;
+    pointer-events: none;
+    z-index: 9999;
+    border: 1px solid rgb(27, 202, 233);
+}
+
+.page-box{
+    display: flex;
+    position: absolute;
+    width: 100vw;
+    height: 100vh;
+}
+
+.left{
+    margin: 20px;
+}
+.move-box{
+    width: 100px;
+    height: 100px;
+    background-color: brown;
+}
