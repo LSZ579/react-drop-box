@@ -25,4 +25,5 @@ const router = [
     
 ]
 
+// this.$set(this,'tree',this,firstData)
 export default router;

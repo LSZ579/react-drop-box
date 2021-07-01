@@ -28,7 +28,39 @@
     border: 1px dashed rgb(255, 189, 127);
 }
 
+.top-left,.top-right,.buttom-left,.buttom-right{
+    position: absolute;
+    width: 15px;
+    height: 15px;
+    background-color: rgb(177, 177, 177);
+}
 
+.top-left{
+    top: -15px;
+    left: -15px;
+    cursor: nw-resize;
+}
+.top-right{
+    top: -15px;
+    right: -15px;
+    cursor: ne-resize;
+}
+.buttom-left{
+    bottom: -15px;
+    left: -15px;
+    cursor: sw-resize;
+}
+
+.buttom-right{
+    bottom: -15px;
+    right: -15px;
+    cursor: se-resize;
+}
+
+.select-border{
+    position: absolute;
+    border: 2px dashed rgb(122, 181, 236);
+}
 
 .page{
     left: 50%;

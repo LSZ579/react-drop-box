@@ -5,6 +5,7 @@ import './style.css'
           super(props)
           this.state={
                 moveFlag: 0,//目标区域的方块拖拽开关
+                moveType: 0,
                 index: 0,//选中的方块
             
                 list:[],//目标区域的方块
@@ -23,6 +24,15 @@ import './style.css'
                 },
                 activeIndex: -1,//激活的box块
                 bindMove: 0,//是否拖拽在目标区域外
+                selectBorderStyle: {
+                    x: 0,
+                    y: 0,
+                    w: 0,
+                    h: 0
+                },
+                boxBorder: 0,
+                beginLoc: {},
+                leftTop: 0
           }
           
     }
@@ -41,7 +51,6 @@ import './style.css'
         e.preventDefault()
         let {code} = e,activeIndex = this.state.activeIndex,
         list = this.state.list;
-        console.log(code)
         if(activeIndex>-1){
             if(code == 'Delete'){
                 list.splice(this.state.activeIndex,1)
@@ -71,16 +80,42 @@ import './style.css'
         })
     }
 
+    // 一起移动
+    raceSelectMove = (offsetX,offsetY)=>{
+        if(this.state.leftTop) return
+        let originPosition = Object.assign({},this.state.selectBorderStyle),list = this.state.list;
+        let x = offsetX - originPosition.x, y = offsetY - originPosition.y;
+
+        originPosition.x = offsetX;
+        originPosition.y = offsetY;
+        console.log(offsetX,offsetY)
+        for(let item of list){
+            if(item.select){
+                item.x = Number(item.x) + x;
+                item.y = Number(item.y) + y;
+            }
+        }
+        this.setState({
+            list,
+            selectBorderStyle: originPosition
+        })
+    }
+
     boxMove = (e)=>{
         e.stopPropagation()
         e.preventDefault()
-        if(this.state.moveFlag==1){
+        if(this.state.moveFlag==1&&!this.leftTop){
             if(e.target.classList[0]  != 'page') return
             let {offsetX,offsetY} = e
-            console.log(offsetX,offsetY)
-            let list = this.state.list
-            list[this.state.index].x = (offsetX-50)<=0?0:(offsetX-50)>650?600:(offsetX-50)
-            list[this.state.index].y = offsetY-50
+            console.log(this.state.moveType)
+            if(this.state.moveType == 'select'){
+                //整体移动
+                this.raceSelectMove(offsetX,offsetY)
+                return
+            }
+            let list = this.state.list,item = list[this.state.index];
+            list[this.state.index].x = (offsetX-item.w/2)<=0?0:(offsetX-item.w/2)>650?600:(offsetX-item.w/2)
+            list[this.state.index].y = offsetY-item.h/2
             this.setState({
                 list
             })
@@ -88,6 +123,7 @@ import './style.css'
     }
     // 目标区域的方块放下拖动
     mouseUp = (e)=>{
+        if(this.state.leftTop) return
         this.setState({
             moveFlag: 0
         })
@@ -97,12 +133,28 @@ import './style.css'
     boxMousedown =(event,i)=>{
         event.stopPropagation()
         event.preventDefault()
-        this.setState({
+        if(this.state.leftTop) return
+        let dataset = {
             moveFlag: 1,
+            moveType: i,
             index: i,
             activeIndex: i
-        })
+        }
+        if(i == 'select'){
+            delete dataset['index']
+            delete dataset['activeIndex']
+        }
+        this.setState(dataset)
         window.addEventListener('mouseup',()=>{
+            if(this.state.moveType){
+                let list = this.state.list;
+                for(let item of list){
+                   item.select = 0
+                }
+                this.setState({
+                    list
+                })
+            }
             this.setState({
                 moveFlag: 0
             })
@@ -115,7 +167,15 @@ import './style.css'
         e.stopPropagation()
         e.preventDefault()
         let select = 1;
+        let selectBorderStyle = {
+            x: 0,
+            y: 0,
+            w: 0,
+            h: 0
+        }
         this.setState({
+            selectBorderStyle,
+            moveType: '',
             activeIndex: -1
         })
         this.resolveSeletData(e.nativeEvent.offsetX,e.nativeEvent.offsetY,0,0,select)
@@ -142,10 +202,52 @@ import './style.css'
 
     // 框选结束
     selectUp = (e)=>{
+        if(!this.state.select) return
         let {x,y} = this.state.selectStyle,select = 0;
         this.resolveSeletData(x,y,e.screenY,e.screenX,select)
-
+        this.computedSelectBox()
     }
+
+
+    // 计算框选中的数据
+    computedSelectBox = ()=>{
+        let { x, y, h, w} = this.state.selectStyle;
+        let list = this.state.list;
+        let selectList = [];
+        let minX,minY,maxX,maxY;
+        for(let item of list) {
+            if(item.x >= x&&item.x  <= x + w - item.w&&item.y >= y&&item.y <= y + h -item.h){
+                    item['select'] = true;
+                    if(selectList.length == 0){
+                        maxY = item.y + item.h;
+                        minX = item.x;
+                        minY = item.y;
+                        maxX = item.x + item.w;
+                    }
+                    selectList.push(item)
+                    minX = minX > item.x?item.x: minX;
+                    minY = minY > item.y?item.y: minY;
+                    maxX = maxX < item.x?item.x + item.w: maxX;
+                    maxY = maxY < item.y?item.y + item.h: maxY;
+               }
+        }
+        console.log(list)
+        if(selectList.length > 0){
+            let selectBorderStyle = {
+                x: minX,
+                y: minY,
+                w: maxX - minX,
+                h: maxY - minY
+            }
+            console.log(selectBorderStyle)
+            this.setState({
+                list,
+                boxBorder: 1,
+                selectBorderStyle
+            })
+        }
+    }
+
 
     // 开始从拖拽区拖进去移动区
     beginMoveAdd = (e)=>{
@@ -162,7 +264,7 @@ import './style.css'
             let list = this.state.list
             let x = (offsetX-50)<=0?0:(offsetX-50)>650?600:(offsetX-50);
             let y = offsetY-50;
-            list.push({x,y,active: 0})
+            list.push({x,y,active: 0,w:100,h:100})
             this.setState({
                 list
             })
@@ -177,6 +279,7 @@ import './style.css'
     // 拖拽到目标区域过程
     beginMoveToBox = (e)=>{
         if(this.state.moveAdd){
+            console.log('拖拽')
             // console.log('bind',e.target.className != 'page',e.target.className)
             if(e.target.classList[0] != 'page') {
                 this.setState({
@@ -202,7 +305,6 @@ import './style.css'
     // 激活方块
     activeBox = (index)=>{
         if(this.state.moveAdd) return 
-        console.log(index,8888)
         let list = this.state.list;
         if(list.length==0) return
         list[index].active = 1;
@@ -211,18 +313,95 @@ import './style.css'
         })
     }
 
+    topLeft = (e,i,type)=>{
+        console.log(e)
+        e.stopPropagation();
+        e.preventDefault();
+        let {clientX,clientY} = e;
+        this.setState({
+            leftTop: 1,
+            beginLoc:{
+                clientX,
+                clientY,
+                i,
+                type
+            }
+        })
+        window.addEventListener('mousemove',this.topLeftMove)
+        window.addEventListener('mouseup',this.topLeftmouseUp)
+        
+    }
+
+    topLeftMove = (e)=>{
+        e.stopPropagation();
+        e.preventDefault();
+        let ev = this.state.beginLoc;
+        let list =this.state.list;
+        let w = e.offsetX - list[ev.i].x,
+        h = e.offsetY - list[ev.i].y;
+
+        if(ev.type == 'topLeft') {
+            if(e.target.classList[0] == 'page'){
+            list[ev.i].x =  e.offsetX;
+            list[ev.i].w-=w;
+            list[ev.i].h-=h;
+            list[ev.i].y =  e.offsetY;
+            }
+        }
+        else if(ev.type == 'bottomLeft'){
+            if(e.target.classList[0] == 'page'){
+                console.log('h',h)
+                list[ev.i].x =  e.offsetX;
+                list[ev.i].w-=w;
+                list[ev.i].h=h;
+            }
+        }else if(ev.type == 'topRight'){
+            list[ev.i].w=w;
+            list[ev.i].h-=h;
+            list[ev.i].y =  e.offsetY;
+        }else if(ev.type == 'bottomRight'){
+            list[ev.i].w=w;
+            list[ev.i].h=h;
+        }
+
+        this.setState({
+            list
+        })
+
+    }
+
+    topLeftmouseUp = (e)=>{
+        this.setState({
+            leftTop: 0
+        })
+        window.removeEventListener('mousemove',this.topLeftMove)
+    }
     render(){
+        let {x,y,w,h} = this.state.selectBorderStyle,
+        boxBorder = {'pointer-events': this.state.leftTop?'none':'auto'};
      return (
         <div className="page-box" style={{cursor: this.state.bindMove?'not-allowed': 'auto'}}>
             <div className="left">
                 <div className="move-box" onMouseDown={this.beginMoveAdd} style={{cursor: this.state.bindMove==1?'no-drop': 'auto'}}></div>
             </div>
-            <div className={`page  ${!this.state.bindMove&&this.state.moveAdd?'active':''}`}  onMouseDown={this.beginSelect} onMouseMove={this.selectMove} onMouseUp={this.selectUp} style={this.state.moveFlag?{cursor: 'move'}:{}}>
+            <div className={`page  ${!this.state.bindMove&&this.state.moveAdd?'active':''}`}  onMouseDown={this.beginSelect} onMouseMove={this.selectMove} onMouseUp={this.selectUp} style={{cursor: this.state.leftTop?'nw-resize':this.state.moveFlag?'move':'auto'}}>
                 {this.state.select?<div className="select" style={{transform: `translate(${this.state.selectStyle.x}px,${this.state.selectStyle.y}px)`,width:`${this.state.selectStyle.w}px`,height:`${this.state.selectStyle.h}px`}}></div>:''}
                 {
                     this.state.list.map((v,i)=>{
-                        return  <div className={`box ${i==this.state.activeIndex?'box-active':''}`} key={i}  onMouseDown={(e)=>{this.boxMousedown(e,i)}} onMouseUp={this.mouseUp} style={{transform:`translate(${v.x}px,${v.y}px)`,'pointer-events':this.state.moveFlag||this.state.moveAdd||this.state.select?'none':'auto'}}>{i}</div>
+                        return  (
+                            <div className={`box ${i==this.state.activeIndex?'box-active':''}`} key={i}  onMouseDown={(e)=>{this.boxMousedown(e,i)}} onMouseUp={this.mouseUp} style={{transform:`translate(${v.x}px,${v.y}px)`,'pointer-events':this.state.moveFlag||this.state.moveAdd||this.state.select||this.state.leftTop?'none':'auto',width: `${v.w}px`,height:`${v.h}px`}}>
+                                {i}
+                               {this.state.activeIndex==i?<div> 
+                                   <div className="top-left" style={boxBorder} onMouseDown={(e)=>{this.topLeft(e,i,'topLeft')}}></div>
+                                <div className="top-right"  style={boxBorder}  onMouseDown={(e)=>{this.topLeft(e,i,'topRight')}}></div>
+                                <div className="buttom-left" style={boxBorder} onMouseDown={(e)=>{this.topLeft(e,i,'bottomLeft')}}></div>
+                                <div className="buttom-right" style={boxBorder} onMouseDown={(e)=>{this.topLeft(e,i,'bottomRight')}}></div></div>:''}
+                                 </div>
+                        )
                     })
+                }
+                {
+                    this.state.boxBorder?<div className="select-border" onMouseDown={(e)=>{this.boxMousedown(e,'select')}} style={{transform:`translate(${x}px,${y}px)`,width: w+'px',height: h+'px','pointer-events':this.state.moveFlag||this.state.moveAdd||this.state.select?'none':'auto'}}></div>:''
                 }
             </div>
             {this.state.moveAdd?<div className="box" style={{transform:`translate(${this.state.addStyle.x}px,${this.state.addStyle.y}px)`,'pointer-events': 'none'}}></div>
