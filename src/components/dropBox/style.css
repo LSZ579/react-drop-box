@@ -28,32 +28,56 @@
     border: 1px dashed rgb(255, 189, 127);
 }
 
-.top-left,.top-right,.buttom-left,.buttom-right{
+.move-type{
     position: absolute;
-    width: 15px;
-    height: 15px;
-    background-color: rgb(177, 177, 177);
+    width: 10px;
+    height: 10px;
+    background-color: rgba(177, 177, 177,0.9);
+}
+.left-move{
+    left: -5px;
+    top: 50%;
+    margin-top: -5px;
+    cursor: w-resize;
+}
+.top-move{
+    top: -5px;
+    left: 50%;
+    margin-left: -5px;
+    cursor: n-resize;
+}
+.right-move{
+    right: -5px;
+    top: 50%;
+    margin-top: -5px;
+    cursor: e-resize;
+}
+.bottom-move{
+    bottom: -5px;
+    left: 50%;
+    margin-left: -5px;
+    cursor: s-resize;
 }
 
 .top-left{
-    top: -15px;
-    left: -15px;
+    top: -5px;
+    left: -5px;
     cursor: nw-resize;
 }
 .top-right{
-    top: -15px;
-    right: -15px;
+    top: -5px;
+    right: -5px;
     cursor: ne-resize;
 }
 .buttom-left{
-    bottom: -15px;
-    left: -15px;
+    bottom: -5px;
+    left: -5px;
     cursor: sw-resize;
 }
 
 .buttom-right{
-    bottom: -15px;
-    right: -15px;
+    bottom: -5px;
+    right: -5px;
     cursor: se-resize;
 }
 

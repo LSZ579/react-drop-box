@@ -32,7 +32,7 @@ import './style.css'
                 },
                 boxBorder: 0,
                 beginLoc: {},
-                leftTop: 0
+                leftTop: 0,
           }
           
     }
@@ -225,8 +225,8 @@ import './style.css'
                         maxX = item.x + item.w;
                     }
                     selectList.push(item)
-                    minX = minX > item.x?item.x: minX;
-                    minY = minY > item.y?item.y: minY;
+                    minX = minX > item.x?item.x : minX;
+                    minY = minY > item.y?item.y : minY;
                     maxX = maxX < item.x?item.x + item.w: maxX;
                     maxY = maxY < item.y?item.y + item.h: maxY;
                }
@@ -280,7 +280,6 @@ import './style.css'
     beginMoveToBox = (e)=>{
         if(this.state.moveAdd){
             console.log('拖拽')
-            // console.log('bind',e.target.className != 'page',e.target.className)
             if(e.target.classList[0] != 'page') {
                 this.setState({
                     bindMove: 1
@@ -314,7 +313,7 @@ import './style.css'
     }
 
     topLeft = (e,i,type)=>{
-        console.log(e)
+        console.log(type)
         e.stopPropagation();
         e.preventDefault();
         let {clientX,clientY} = e;
@@ -336,32 +335,45 @@ import './style.css'
         e.stopPropagation();
         e.preventDefault();
         let ev = this.state.beginLoc;
-        let list =this.state.list;
-        let w = e.offsetX - list[ev.i].x,
-        h = e.offsetY - list[ev.i].y;
-
-        if(ev.type == 'topLeft') {
-            if(e.target.classList[0] == 'page'){
-            list[ev.i].x =  e.offsetX;
-            list[ev.i].w-=w;
-            list[ev.i].h-=h;
-            list[ev.i].y =  e.offsetY;
-            }
-        }
-        else if(ev.type == 'bottomLeft'){
-            if(e.target.classList[0] == 'page'){
-                console.log('h',h)
-                list[ev.i].x =  e.offsetX;
-                list[ev.i].w-=w;
-                list[ev.i].h=h;
-            }
-        }else if(ev.type == 'topRight'){
-            list[ev.i].w=w;
-            list[ev.i].h-=h;
-            list[ev.i].y =  e.offsetY;
-        }else if(ev.type == 'bottomRight'){
-            list[ev.i].w=w;
-            list[ev.i].h=h;
+        let list = this.state.list,item = list[ev.i];
+        let w = e.offsetX - item.x,
+        h = e.offsetY - item.y;
+        if(e.target.classList[0] !== 'page') return
+        switch(ev.type){
+            case 'nw-resize':
+                item.x =  e.offsetX;
+                item.w -= w;
+                item.h -= h;
+                item.y =  e.offsetY;
+                break
+            case 'sw-resize':
+                item.x =  e.offsetX;
+                item.w -= w;
+                item.h = h;
+                break
+            case 'ne-resize':
+                item.w=w;
+                item.h -= h;
+                item.y =  e.offsetY;
+                break
+            case 'se-resize':
+                item.w = w;
+                item.h = h;
+                break
+            case 'w-resize':
+                item.x = e.offsetX;
+                item.w -= w;
+                break
+            case 'n-resize':
+                item.h -= h;
+                item.y =  e.offsetY;
+                break
+            case 'e-resize':
+                item.w = w;
+                break
+            default:
+                item.h = h
+                break
         }
 
         this.setState({
@@ -378,13 +390,14 @@ import './style.css'
     }
     render(){
         let {x,y,w,h} = this.state.selectBorderStyle,
+        directionType = this.state.beginLoc.type,
         boxBorder = {'pointer-events': this.state.leftTop?'none':'auto'};
      return (
         <div className="page-box" style={{cursor: this.state.bindMove?'not-allowed': 'auto'}}>
             <div className="left">
                 <div className="move-box" onMouseDown={this.beginMoveAdd} style={{cursor: this.state.bindMove==1?'no-drop': 'auto'}}></div>
             </div>
-            <div className={`page  ${!this.state.bindMove&&this.state.moveAdd?'active':''}`}  onMouseDown={this.beginSelect} onMouseMove={this.selectMove} onMouseUp={this.selectUp} style={{cursor: this.state.leftTop?'nw-resize':this.state.moveFlag?'move':'auto'}}>
+            <div className={`page  ${!this.state.bindMove&&this.state.moveAdd?'active':''}`}  onMouseDown={this.beginSelect} onMouseMove={this.selectMove} onMouseUp={this.selectUp} style={{cursor: this.state.leftTop?directionType:this.state.moveFlag?'move':'auto'}}>
                 {this.state.select?<div className="select" style={{transform: `translate(${this.state.selectStyle.x}px,${this.state.selectStyle.y}px)`,width:`${this.state.selectStyle.w}px`,height:`${this.state.selectStyle.h}px`}}></div>:''}
                 {
                     this.state.list.map((v,i)=>{
@@ -392,10 +405,14 @@ import './style.css'
                             <div className={`box ${i==this.state.activeIndex?'box-active':''}`} key={i}  onMouseDown={(e)=>{this.boxMousedown(e,i)}} onMouseUp={this.mouseUp} style={{transform:`translate(${v.x}px,${v.y}px)`,'pointer-events':this.state.moveFlag||this.state.moveAdd||this.state.select||this.state.leftTop?'none':'auto',width: `${v.w}px`,height:`${v.h}px`}}>
                                 {i}
                                {this.state.activeIndex==i?<div> 
-                                   <div className="top-left" style={boxBorder} onMouseDown={(e)=>{this.topLeft(e,i,'topLeft')}}></div>
-                                <div className="top-right"  style={boxBorder}  onMouseDown={(e)=>{this.topLeft(e,i,'topRight')}}></div>
-                                <div className="buttom-left" style={boxBorder} onMouseDown={(e)=>{this.topLeft(e,i,'bottomLeft')}}></div>
-                                <div className="buttom-right" style={boxBorder} onMouseDown={(e)=>{this.topLeft(e,i,'bottomRight')}}></div></div>:''}
+                                   <div className="move-type top-left" style={boxBorder} onMouseDown={(e)=>{this.topLeft(e,i,'nw-resize')}}></div>
+                                   <div className="move-type left-move" style={boxBorder} onMouseDown={(e)=>{this.topLeft(e,i,'w-resize')}}></div>
+                                   <div className="move-type top-move"  style={boxBorder} onMouseDown={(e)=>{this.topLeft(e,i,'n-resize')}}></div>
+                                   <div className="move-type right-move" style={boxBorder} onMouseDown={(e)=>{this.topLeft(e,i,'e-resize')}}></div>
+                                   <div className="move-type bottom-move" style={boxBorder} onMouseDown={(e)=>{this.topLeft(e,i,'s-resize')}}></div>
+                                    <div className="move-type top-right"  style={boxBorder}  onMouseDown={(e)=>{this.topLeft(e,i,'ne-resize')}}></div>
+                                    <div className="move-type buttom-left" style={boxBorder} onMouseDown={(e)=>{this.topLeft(e,i,'sw-resize')}}></div>
+                                    <div className="move-type buttom-right" style={boxBorder} onMouseDown={(e)=>{this.topLeft(e,i,'se-resize')}}></div></div>:''}
                                  </div>
                         )
                     })
