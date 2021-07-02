@@ -2,7 +2,7 @@
     display: flex;
     position: absolute;
     box-sizing: content-box;
-    width: 100vw;
+    width: 100%;
     overflow: hidden;
     height: 100vh;
 }
@@ -13,10 +13,10 @@
     width: 100px;
     height: 100px;
     /* display: inline-block; */
-    background-color: aquamarine;
+    background-color: rgb(250, 215, 162);
     /* transform: translate(0,0); */
     user-select: none;
-    border: 1px dashed aquamarine;
+    border: 1px dashed rgb(250, 215, 162);
     position: absolute;
     /* pointer-events: none; */
     /* cursor: move; */
@@ -28,6 +28,49 @@
     border: 1px dashed rgb(255, 189, 127);
 }
 
+.page{
+    left: 50%;
+    position: absolute;
+    width: 700px;
+    height: 1920px;
+    margin-left: -350px;
+    background-color: rgba(241, 241, 241, 0.356);
+    border: 2px dashed rgb(233, 233, 233);
+}
+.active{
+    border: 2px dashed rgb(99, 184, 240);
+}
+.select{
+    background-color: rgba(127, 255, 255,0.2);
+    position: absolute;
+    pointer-events: none;
+    z-index: 9999;
+    border: 1px solid rgb(27, 202, 233);
+}
+
+
+.left{
+    margin: 20px;
+}
+.move-box{
+    width: 100px;
+    height: 100px;
+    background-color: rgb(250, 215, 162);
+}
+
+
+/* 辅助线 */
+.top-left-x{
+    position: absolute;
+    left: 0;
+    width: 1px;
+    display: block;
+    background-color: cornflowerblue;
+    height: 100px;
+    top: -100px;
+}
+
+/* 放大缩小 */
 .move-type{
     position: absolute;
     width: 10px;
@@ -84,34 +127,4 @@
 .select-border{
     position: absolute;
     border: 2px dashed rgb(122, 181, 236);
-}
-
-.page{
-    left: 50%;
-    position: absolute;
-    width: 700px;
-    height: 100vh;
-    margin-left: -350px;
-    background-color: beige;
-    border: 2px dashed beige;
-}
-.active{
-    border: 2px dashed rgb(240, 99, 181);
-}
-.select{
-    background-color: rgba(127, 255, 255,0.2);
-    position: absolute;
-    pointer-events: none;
-    z-index: 9999;
-    border: 1px solid rgb(27, 202, 233);
-}
-
-
-.left{
-    margin: 20px;
-}
-.move-box{
-    width: 100px;
-    height: 100px;
-    background-color: brown;
 }

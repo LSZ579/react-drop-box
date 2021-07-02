@@ -21,7 +21,7 @@ export default class HomePage extends Component{
         render(){
             return (
                 <div>
-                    <Header title="头部导航" fun={this.child}  ref={this.childs}></Header>
+                    {/* <Header title="头部导航" fun={this.child}  ref={this.childs}></Header> */}
                     <DropBox></DropBox>
                 </div>
             )

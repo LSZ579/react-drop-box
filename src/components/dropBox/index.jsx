@@ -33,6 +33,7 @@ import './style.css'
                 boxBorder: 0,
                 beginLoc: {},
                 leftTop: 0,
+                topLeftLine: false
           }
           
     }
@@ -115,7 +116,19 @@ import './style.css'
             }
             let list = this.state.list,item = list[this.state.index];
             list[this.state.index].x = (offsetX-item.w/2)<=0?0:(offsetX-item.w/2)>650?600:(offsetX-item.w/2)
-            list[this.state.index].y = offsetY-item.h/2
+            list[this.state.index].y = offsetY-item.h/2;
+            for(let i = 0;i<list.length;i++){
+                if(i!=this.state.index&&list[i].x==item.x){
+                    this.setState({
+                        topLeftLine: true
+                    })
+                    break
+                }else{
+                    this.setState({
+                        topLeftLine: false
+                    })
+                }
+            }
             this.setState({
                 list
             })
@@ -125,7 +138,8 @@ import './style.css'
     mouseUp = (e)=>{
         if(this.state.leftTop) return
         this.setState({
-            moveFlag: 0
+            moveFlag: 0,
+            select: 0
         })
         window.removeEventListener('mousemove',this.boxMove,false)
     }
@@ -176,7 +190,7 @@ import './style.css'
         this.setState({
             selectBorderStyle,
             moveType: '',
-            activeIndex: -1
+            activeIndex: -1,
         })
         this.resolveSeletData(e.nativeEvent.offsetX,e.nativeEvent.offsetY,0,0,select)
     }
@@ -205,6 +219,10 @@ import './style.css'
         if(!this.state.select) return
         let {x,y} = this.state.selectStyle,select = 0;
         this.resolveSeletData(x,y,e.screenY,e.screenX,select)
+        this.setState({
+            moveType: '',
+            select: 0
+        })
         this.computedSelectBox()
     }
 
@@ -227,8 +245,8 @@ import './style.css'
                     selectList.push(item)
                     minX = minX > item.x?item.x : minX;
                     minY = minY > item.y?item.y : minY;
-                    maxX = maxX < item.x?item.x + item.w: maxX;
-                    maxY = maxY < item.y?item.y + item.h: maxY;
+                    maxX = maxX < item.x?item.x + item.w : maxX;
+                    maxY = maxY < item.y?item.y + item.h : maxY;
                }
         }
         console.log(list)
@@ -252,9 +270,11 @@ import './style.css'
     // 开始从拖拽区拖进去移动区
     beginMoveAdd = (e)=>{
         this.setState({
-            moveAdd: 1
+            moveAdd: 1,
+            moveFlag: 0,
+            selectBorderStyle: {x:0}
         })
-        window.addEventListener('mouseup',this.moveAddboxEnd)
+        window.addEventListener('mouseup',this.moveAddboxEnd,false)
         window.addEventListener('mousemove',this.beginMoveToBox,false)
     }
 
@@ -271,7 +291,7 @@ import './style.css'
         }
         this.setState({
             moveAdd: 0,
-            bindMove: 0
+            bindMove: 0,
         })
         window.removeEventListener('mousemove',this.beginMoveToBox)
     }
@@ -279,20 +299,12 @@ import './style.css'
     // 拖拽到目标区域过程
     beginMoveToBox = (e)=>{
         if(this.state.moveAdd){
-            console.log('拖拽')
-            if(e.target.classList[0] != 'page') {
-                this.setState({
-                    bindMove: 1
-                })
-            }else{
-                this.setState({
-                    bindMove: 0
-                })
-            }
+            console.log('拖拽',e.target.classList[0])
             let {x,y} = e
             x = x - 50;
             y = y - 100 
             this.setState({
+                bindMove: e.target.classList[0] != 'page',
                 addStyle:{
                     x,y
                 }
@@ -391,19 +403,29 @@ import './style.css'
     render(){
         let {x,y,w,h} = this.state.selectBorderStyle,
         directionType = this.state.beginLoc.type,
+        selectStyle = {transform: `translate(${this.state.selectStyle.x}px,${this.state.selectStyle.y}px)`,width:`${this.state.selectStyle.w}px`,height:`${this.state.selectStyle.h}px`},
+        boxStyle = this.state.moveFlag||this.state.moveAdd||this.state.select||this.state.leftTop,
         boxBorder = {'pointer-events': this.state.leftTop?'none':'auto'};
+
      return (
         <div className="page-box" style={{cursor: this.state.bindMove?'not-allowed': 'auto'}}>
-            <div className="left">
-                <div className="move-box" onMouseDown={this.beginMoveAdd} style={{cursor: this.state.bindMove==1?'no-drop': 'auto'}}></div>
+            <div className="left" style={{'pointer-events':this.state.moveAdd||this.state.bindMove?'none':'auto'}}>
+                <div className="move-box" onMouseDown={this.beginMoveAdd} style={{'pointer-events':this.state.moveAdd||this.state.bindMove?'none':'auto'}}></div>
             </div>
             <div className={`page  ${!this.state.bindMove&&this.state.moveAdd?'active':''}`}  onMouseDown={this.beginSelect} onMouseMove={this.selectMove} onMouseUp={this.selectUp} style={{cursor: this.state.leftTop?directionType:this.state.moveFlag?'move':'auto'}}>
-                {this.state.select?<div className="select" style={{transform: `translate(${this.state.selectStyle.x}px,${this.state.selectStyle.y}px)`,width:`${this.state.selectStyle.w}px`,height:`${this.state.selectStyle.h}px`}}></div>:''}
+                {this.state.select&&this.state.selectStyle.x>0?<div className="select" style={selectStyle}></div>:''}
                 {
                     this.state.list.map((v,i)=>{
                         return  (
-                            <div className={`box ${i==this.state.activeIndex?'box-active':''}`} key={i}  onMouseDown={(e)=>{this.boxMousedown(e,i)}} onMouseUp={this.mouseUp} style={{transform:`translate(${v.x}px,${v.y}px)`,'pointer-events':this.state.moveFlag||this.state.moveAdd||this.state.select||this.state.leftTop?'none':'auto',width: `${v.w}px`,height:`${v.h}px`}}>
+                            <div className={`box ${i==this.state.activeIndex?'box-active':''}`} key={i}  onMouseDown={(e)=>{this.boxMousedown(e,i)}} onMouseUp={this.mouseUp} style={{transform:`translate(${v.x}px,${v.y}px)`,width: `${v.w}px`,height:`${v.h}px`,'pointer-events':boxStyle?'none':'auto'}}>
                                 {i}
+                                {/* 对齐辅助线 */}
+                                
+                                 {
+                                   this.state.topLeftLine? <div className="top-left-x"></div>:''
+                                 }
+                                
+                                {/* 放大缩小 */}
                                {this.state.activeIndex==i?<div> 
                                    <div className="move-type top-left" style={boxBorder} onMouseDown={(e)=>{this.topLeft(e,i,'nw-resize')}}></div>
                                    <div className="move-type left-move" style={boxBorder} onMouseDown={(e)=>{this.topLeft(e,i,'w-resize')}}></div>
@@ -412,13 +434,14 @@ import './style.css'
                                    <div className="move-type bottom-move" style={boxBorder} onMouseDown={(e)=>{this.topLeft(e,i,'s-resize')}}></div>
                                     <div className="move-type top-right"  style={boxBorder}  onMouseDown={(e)=>{this.topLeft(e,i,'ne-resize')}}></div>
                                     <div className="move-type buttom-left" style={boxBorder} onMouseDown={(e)=>{this.topLeft(e,i,'sw-resize')}}></div>
-                                    <div className="move-type buttom-right" style={boxBorder} onMouseDown={(e)=>{this.topLeft(e,i,'se-resize')}}></div></div>:''}
-                                 </div>
+                                    <div className="move-type buttom-right" style={boxBorder} onMouseDown={(e)=>{this.topLeft(e,i,'se-resize')}}></div>
+                                    </div>:''}
+                            </div>
                         )
                     })
                 }
                 {
-                    this.state.boxBorder?<div className="select-border" onMouseDown={(e)=>{this.boxMousedown(e,'select')}} style={{transform:`translate(${x}px,${y}px)`,width: w+'px',height: h+'px','pointer-events':this.state.moveFlag||this.state.moveAdd||this.state.select?'none':'auto'}}></div>:''
+                    this.state.boxBorder&&x>0?<div className="select-border" onMouseDown={(e)=>{this.boxMousedown(e,'select')}} style={{transform:`translate(${x}px,${y}px)`,width: w+'px',height: h+'px','pointer-events':this.state.moveFlag||this.state.moveAdd||this.state.select?'none':'auto'}}></div>:''
                 }
             </div>
             {this.state.moveAdd?<div className="box" style={{transform:`translate(${this.state.addStyle.x}px,${this.state.addStyle.y}px)`,'pointer-events': 'none'}}></div>
